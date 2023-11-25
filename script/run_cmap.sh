@@ -1,3 +1,5 @@
+#!/bin/bash
+
 query_name=$1
 reference_data_file=$2
 gene_info_file=$3
