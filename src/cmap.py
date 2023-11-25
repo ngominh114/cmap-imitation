@@ -1,8 +1,16 @@
+import subprocess
+try:
+    __import__("cmapPy")
+except ImportError:
+    subprocess.check_call(['pip', 'install', "cmapPy"])
+
 import sys
 from cmapPy.pandasGEXpress.parse import parse
 import pandas as pd
 import time
 import datetime
+
+
 
 start_time = time.time()
 query_name = sys.argv[1]
