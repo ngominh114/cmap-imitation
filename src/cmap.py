@@ -34,15 +34,17 @@ n_expression = len(data.columns)
 n_ref_gene = len(data.index)
 
 def calc_es_score(ref_df, gene_list):
-    ref_df = abs(ref_df)
     cumsum_score = 0
     es_score = 0
     n = len(ref_df.index)
     ns = len(gene_list)
-    nr = sum(ref_df)
+    nr = 0
     for i in range(n):
         if gene_dict[ref_df.index[i]] in gene_list:
-            cumsum_score += ref_df[i]/nr
+            nr += abs(ref_df[i])
+    for i in range(n):
+        if gene_dict[ref_df.index[i]] in gene_list:
+            cumsum_score += abs(ref_df[i])/nr
         else:
             cumsum_score -= 1/(n-ns)
 
