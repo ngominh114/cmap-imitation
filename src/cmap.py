@@ -39,16 +39,24 @@ def calc_es_score(ref_df, gene_list):
     n = len(ref_df.index)
     ns = len(gene_list)
     nr = 0
+    indexes = []
     for i in range(n):
         if gene_dict[ref_df.index[i]] in gene_list:
-            nr += abs(ref_df[i])
-    for i in range(n):
-        if gene_dict[ref_df.index[i]] in gene_list:
-            cumsum_score += abs(ref_df[i])/nr
-        else:
-            cumsum_score -= 1/(n-ns)
-
+            nr += abs(ref_df.values[i])
+            indexes.append(i)
+        
+    for i in range(len(indexes)):
+        if i == 0: pre = -1
+        else: pre = indexes[i-1]
+        cumsum_score -= (indexes[i] - pre - 1)/(n-ns)
         if abs(cumsum_score) > abs(es_score): es_score = cumsum_score
+
+        cumsum_score += abs(ref_df.values[indexes[i]])/nr
+        if abs(cumsum_score) > abs(es_score): es_score = cumsum_score
+
+        if i == len(indexes)-1:
+            cumsum_score -= (n - 1 - indexes[i])/(n-ns)
+            if abs(cumsum_score) > abs(es_score): es_score = cumsum_score
     return es_score
 def cmap(up_gene_list, down_gene_list):
     up_gene_list = set(up_gene_list)
@@ -66,7 +74,8 @@ def cmap(up_gene_list, down_gene_list):
     return pd.DataFrame({"expression": data.columns, "c_score": c_scores})
 
 result = cmap(up_genes, down_genes)
+result = result.sort_values(by=["c_score"], ascending=False)
 result.to_csv(f"{query_name} result.csv")
 end_time = time.time()
 
-print("Total running time is", str(datetime.timedelta(end_time - start_time)))
+print("Total running time is", str(datetime.timedelta(seconds=end_time - start_time)))
