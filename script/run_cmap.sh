@@ -12,7 +12,6 @@ gene_info_file=$3
 up_gene_file=$4
 down_gene_file=$5
 
-module load python
-pip install cmapPy
+conda activate cmap
 
-python ../src/cmap.py $query_name $reference_data_file $gene_info_file $up_gene_file $down_gene_file
+python -u ../src/cmap.py $query_name $reference_data_file $gene_info_file $up_gene_file $down_gene_file
