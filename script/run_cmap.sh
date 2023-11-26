@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=cmap_run
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=256GB
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=512GB
 #SBATCH --time=01:00:00
 
 
