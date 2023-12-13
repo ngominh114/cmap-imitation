@@ -1,4 +1,5 @@
 if (!require("cmapR", character.only = TRUE)){
+  install.packages("devtools")
   install.packages("cmapR")
 }
 
