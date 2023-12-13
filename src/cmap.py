@@ -35,25 +35,16 @@ n_expression = len(data.columns)
 n_ref_gene = len(data.index)
 
 def calc_es_score(ref_df, cid, gene_list):
-    cumsum_score = 0
-    ref_df = ref_df.loc[gene_list].sort_values(by=["ind"])
-    es_scores = []
+    gene_indexes = ref_df.index.isin(gene_list)
     ns = len(gene_list)
-    nr = ref_df[cid].sum()
-    for i in range(ns):
-        if i == 0: pre = -1
-        else: pre = ref_df['ind'].iloc[i-1]
-
-        cumsum_score -= (ref_df['ind'].iloc[i] - pre - 1)/(n_ref_gene-ns)
-        es_scores.extend([cumsum_score])
-        cumsum_score += ref_df[cid].iloc[i]/nr
-        es_scores.extend([cumsum_score])
-        if i == ns-1:
-            cumsum_score -= (n_ref_gene - 1 - ref_df['ind'].iloc[i])/(n_ref_gene-ns)
-            es_scores.extend([cumsum_score])
-    max_es = max(es_scores)
-    min_es = min(es_scores)
-    return max_es if abs(max_es) > abs(min_es) else min_es
+    nr = ref_df.loc[gene_indexes, cid].sum()
+    cumsum_score = np.zeros(n_ref_gene)
+    cumsum_score[gene_indexes] = ref_df.loc[gene_indexes, cid] / nr
+    cumsum_score[~gene_indexes] = -1 / (n_ref_gene - ns)
+    scores = np.cumsum(cumsum_score)
+    min_score = min(scores)
+    max_score = max(scores)
+    return max_score if abs(max_score) > abs(min_score) else min_score
 
 def cmap(up_gene_list, down_gene_list):
     start_time = time.time()
@@ -63,7 +54,6 @@ def cmap(up_gene_list, down_gene_list):
     for cid in data.columns:
         df = data[cid]
         df = pd.DataFrame(df.sort_values(ascending=False)).abs()
-        df['ind'] = [i for i in range(n_ref_gene)]
         up_es_score = calc_es_score(df, cid, up_gene_list)
         down_es_score = calc_es_score(df, cid, down_gene_list)
         if up_es_score*down_es_score < 0:
