@@ -1,95 +1,81 @@
+if (!require("cmapR", character.only = TRUE)){
+  install.packages("cmapR")
+}
+
 library(cmapR)
 
-reference_file = "C:/Users/ngomi/Downloads/Documents/level5_beta_trt_oe_n34171x12328.gctx"
-up_gene_file = "../data/Example up genes.txt"
-down_gene_file = "../data/Example down genes.txt"
-gene_file = "../data/geneinfo_beta.txt"
-# args = commandArgs(trailingOnly=TRUE)
-# reference_file = args[1]
-# up_gene_file = args[2]
-# down_gene_file = args[3]
-typeof(gene_data$gene_id[1])
-gene_dict = list()
-for(i in 1:length(gene_data$gene_id)){
-  gene_dict[[gene_data$gene_id[i]]] <- gene_data$gene_symbol[i]
-}
-
+# reference_file = "C:/Users/ngomi/Downloads/Documents/data.gctx"
+# up_gene_file = "../data/Example_up_genes.txt"
+# down_gene_file = "../data/Example_down_genes.txt"
+# gene_file = "../data/geneinfo_beta.txt"
+args = commandArgs(trailingOnly=TRUE)
+query_name = args[1]
+reference_file = args[2]
+up_gene_file = args[3]
+down_gene_file = args[4]
+gene_file = args[5]
 col_meta = read_gctx_meta(reference_file, dim="col")
 cids = col_meta$id
+row_meta = read_gctx_meta(reference_file, dim="row")
+
+data = mat(parse_gctx(reference_file))
+
 up_gene_list = read.table(up_gene_file, header = FALSE)$V1
 down_gene_list = read.table(down_gene_file, header = FALSE)$V1
-gene_data = read.table(gene_file, header = TRUE, sep = "\t")
+gene_data = read.csv(gene_file, header = TRUE, sep = "\t")
 
-calc_es_score_1 = function(reference_df, gene_list){
-  cumsum_arr = c(0)
-  cumsum_score = 0
-  es_score = 0
-  n = nrow(reference_df)
-  n_s = length(gene_list)
-  
-  for(i in 1:n){
-    if(gene_dict[as.integer(reference_df$gene[i])] %in% gene_list){
-      cumsum_score = cumsum_score + sqrt((n - n_s) / n_s)
-    }else{
-      cumsum_score = cumsum_score - sqrt(n_s / (n_s + n))
-    }
-    cumsum_arr = c(cumsum_arr, cumsum_score)
-    print(cumsum_score)
-    break
-    if(cumsum_score < 0){
-      es_score = max(es_score, abs(cumsum_score))
-    }else{
-      es_score = max(es_score, cumsum_score)
-    }
-  }
-  print(n)
-  print(length(cumsum_arr))
-  plot(1:(n+1), cumsum_arr)
-  return(es_score)
+gene_dict = list()
+for(i in 1:length(gene_data$gene_id)){
+  gene_dict[[gene_data$gene_symbol[i]]] <- gene_data$gene_id[i][1]
 }
 
-calc_es_score_2 = function(reference_df, gene_list){
-  cumsum_score = 0
-  es_score = 0
-  n = nrow(reference_df)
-  ns = length(gene_list)
-  nr = 0
-  for(i in 1:n){
-    if(gene_dict[as.integer(reference_df$gene[i])] %in% gene_list){
-      nr = nr + abs(reference_df$expression[i])
-    }
+for(i in 1:length(up_gene_list)){
+  if(up_gene_list[i] %in% names(gene_dict)){
+    up_gene_list[i] = as.integer(gene_dict[up_gene_list[i]])
   }
+}
 
-  for(i in 1:n){
-    if(gene_dict[as.integer(reference_df$gene[i])] %in% gene_list){
-      cumsum_score = cumsum_score + abs(reference_df$expression[i])/nr
-    }else{
-      cumsum_score = cumsum_score - 1/(n - ns)
-    }
-    if(abs(cumsum_score) > abs(es_score)){
-      es_score = cumsum_score
-    }
+for(i in 1:length(down_gene_list)){
+  if(down_gene_list[i] %in% names(gene_dict)){
+    down_gene_list[i] = as.integer(gene_dict[down_gene_list[i]])
   }
+}
+
+up_gene_list = as.integer(up_gene_list)
+down_gene_list = as.integer(down_gene_list)
+
+calc_es_score = function(reference_df, gene_list){
+  gene_indexes <- reference_df$gene %in% gene_dict[gene_list]
+  nr <- sum(abs(reference_df[gene_indexes, "expression"]))
+  n <- nrow(reference_df)
+  ns <- length(gene_list)
+  
+  cumsum_score <- rep(0, n)
+  cumsum_score[gene_indexes] <- abs(reference_df[gene_indexes, "expression"]) / nr
+  cumsum_score[!gene_indexes] <- -1 /(n - ns)
+  
+  es_score <- max(cumsum(cumsum_score))
+  
   return(es_score)
 }
 
 cmap = function(){
   n = length(cids)
-  c_scores = rep(0, n)
+  c_scores = numeric(n)
+  genes = as.integer(row_meta$id)
   for(i in 1:n){
-    cid = cids[i]
-    data = parse_gctx(reference_file, cid = cid)
-    m = mat(data)
-    ordered_index = order(m[,1], decreasing = TRUE)
-    genes = row.names(m)
-    df = data.frame("gene" = genes, "expression" = c(m))
-    df = df[order(df$expression, decreasing = TRUE), ]
-    es_up = calc_es_score_2(df, up_gene_list)
-    es_down = calc_es_score_2(df, down_gene_list)
-    if(es_up*es_down < 0){
-      c_scores[i] = (es_up - es_down) / 2
+    m <- data[, i]
+    ordered_index <- order(m, decreasing = TRUE)
+    df <- data.frame("gene" = genes, "expression" = m[ordered_index])
+    es_up <- calc_es_score(df, up_gene_list)
+    es_down <- calc_es_score(df, down_gene_list)
+    if (es_up * es_down < 0) {
+      c_scores[i] <- (es_up - es_down) / 2
     }
   }
-  data.frame("cid"=cids, "connectivity_score" = c_scores)
+  result_df <- data.frame("expression" = cids, "connectivity_score" = c_scores)
+  return(result_df)
 }
+
 result = cmap()
+write.csv(result, paste(query_name, "result.csv"))
