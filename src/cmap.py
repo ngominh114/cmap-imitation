@@ -44,8 +44,8 @@ def calc_es_score(ref_df, cid, gene_list):
     cumsum_score[gene_indexes] = ref_df.loc[gene_indexes, cid] / nr
     cumsum_score[~gene_indexes] = -1 / (n_ref_gene - ns)
     scores = np.cumsum(cumsum_score)
-    min_score = min(scores)
-    max_score = max(scores)
+    min_score = np.min(scores)
+    max_score = np.max(scores)
     return max_score if abs(max_score) > abs(min_score) else min_score
 
 def generate_null_distribution(n_up_gene, n_down_gene, df, cid, n_samples):
@@ -58,18 +58,14 @@ def generate_null_distribution(n_up_gene, n_down_gene, df, cid, n_samples):
 
 def calc_p_value(value, null_distribution):
     sign = 1 if value >= 0 else -1
-    signed_null_distribution = [value for value in null_distribution if sign * value >= 0]
-    count_extreme_values = sum(1 for value in signed_null_distribution if abs(value) >= abs(value))
-    signed_p_value = count_extreme_values / len(signed_null_distribution)
-    return signed_p_value
+    signed_null_distribution = [val for val in null_distribution if sign * val >= 0]
+    count_extreme_values = sum(1 for val in signed_null_distribution if abs(val) >= abs(value))
+    return count_extreme_values / len(signed_null_distribution)
 
 def calc_connectivity_score(up_gene, down_gene, df, cid):
     up_es_score = calc_es_score(df, cid, up_gene)
     down_es_score = calc_es_score(df, cid, down_gene)
-    if up_es_score*down_es_score < 0:
-        return (up_es_score - down_es_score)/2
-    else:
-        return
+    return (up_es_score - down_es_score) / 2 if up_es_score * down_es_score < 0 else 0
 
 def cmap(up_gene_list, down_gene_list):
     start_time = time.time()
