@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import time
 import datetime
-import random
 
+start_time = time.time()
 query_name = sys.argv[1]
 reference_data_file = sys.argv[2] # reference data in gctx format
 gene_info_file = sys.argv[3] # ../data/geneinfo_beta.txt
@@ -54,7 +54,7 @@ def calc_connectivity_score(up_gene, down_gene, df, cid):
     return (up_es_score - down_es_score) / 2 if up_es_score * down_es_score < 0 else 0
 
 def cmap(up_gene_list, down_gene_list):
-    start_time = time.time()
+    
     up_gene_list = [gene_dict[i] for i in up_gene_list if i in gene_dict]
     down_gene_list = [gene_dict[i] for i in down_gene_list if i in gene_dict]
     c_scores = []
@@ -62,10 +62,11 @@ def cmap(up_gene_list, down_gene_list):
         df = data[cid]
         df = pd.DataFrame(df.sort_values(ascending=False)).abs()
         c_scores.append(calc_connectivity_score(up_gene_list, down_gene_list, df, cid))
-    end_time = time.time()
-    print("Total running time is", str(datetime.timedelta(seconds=end_time - start_time)))
     return pd.DataFrame({"expression": data.columns, "c_score": c_scores})
 
 result = cmap(up_genes, down_genes)
 result = result.sort_values(by=["c_score"], ascending=False)
-result.to_csv(f"{query_name} result.csv")
+result.to_csv(f"{query_name}_py.csv")
+
+end_time = time.time()
+print("Total running time is", str(datetime.timedelta(seconds=end_time - start_time)))

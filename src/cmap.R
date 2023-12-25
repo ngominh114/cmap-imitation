@@ -8,13 +8,15 @@ library(cmapR)
 args = commandArgs(trailingOnly=TRUE)
 query_name = args[1]
 reference_file = args[2]
-up_gene_file = args[3]
-down_gene_file = args[4]
-gene_file = args[5]
+gene_file = args[3]
+up_gene_file = args[4]
+down_gene_file = args[5]
+
+print(paste("Starting time:", Sys.time()))
 
 print(paste("Start calculating query:", query_name, "with the following arguments."))
-print(paste("Reference dataset location:", reference_data_file))
-print(paste("Gene info file location:", gene_info_file))
+print(paste("Reference dataset location:", reference_file))
+print(paste("Gene info file location:", gene_file))
 print(paste("Up gene file location:", up_gene_file))
 print(paste("Down gene file location:", down_gene_file))
 
@@ -68,6 +70,7 @@ calc_es_score = function(reference_df, gene_list){
 }
 
 cmap = function(){
+  print("Start running CMap algorithm...")
   n = length(cids)
   c_scores = numeric(n)
   genes = as.integer(row_meta$id)
@@ -82,9 +85,11 @@ cmap = function(){
     }
   }
   result_df <- data.frame("expression" = cids, "connectivity_score" = c_scores)
+  result_df <- result_df[order(result_df$connectivity_score, decreasing = TRUE), ]
   return(result_df)
 }
-result = cmap()
-write.csv(result, paste(query_name, "_result.csv"))
 
-print(Sys.time())
+result = cmap()
+write.csv(result, paste(query_name, "_R.csv", sep=""))
+
+print(paste("Ending time:", Sys.time()))
