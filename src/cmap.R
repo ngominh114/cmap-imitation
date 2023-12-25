@@ -60,8 +60,8 @@ calc_es_score = function(reference_df, gene_list){
   cumsum_score[gene_indexes] <- abs(reference_df[gene_indexes, "expression"]) / nr
   cumsum_score[!gene_indexes] <- -1 /(n - ns)
   scores = cumsum(cumsum_score)
-  max_score <- max(scores)
-  min_score <- min(scores)
+  max_score <- max(scores, -1)
+  min_score <- min(scores, 1)
   if(abs(max_score) > abs(min_score)){
     return(max_score)
   }else{
