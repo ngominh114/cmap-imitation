@@ -48,20 +48,6 @@ def calc_es_score(ref_df, cid, gene_list):
     max_score = np.max(scores)
     return max_score if abs(max_score) > abs(min_score) else min_score
 
-def generate_null_distribution(n_up_gene, n_down_gene, df, cid, n_samples):
-    null_scores = []
-    for _ in range(n_samples):
-        random_up_gene = random.sample(reference_gene_list, n_up_gene)
-        random_down_gene = random.sample(reference_gene_list, n_down_gene)
-        null_scores.append(calc_connectivity_score(random_up_gene, random_down_gene, df, cid))
-    return null_scores
-
-def calc_p_value(value, null_distribution):
-    sign = 1 if value >= 0 else -1
-    signed_null_distribution = [val for val in null_distribution if sign * val >= 0]
-    count_extreme_values = sum(1 for val in signed_null_distribution if abs(val) >= abs(value))
-    return count_extreme_values / len(signed_null_distribution)
-
 def calc_connectivity_score(up_gene, down_gene, df, cid):
     up_es_score = calc_es_score(df, cid, up_gene)
     down_es_score = calc_es_score(df, cid, down_gene)
@@ -71,19 +57,14 @@ def cmap(up_gene_list, down_gene_list):
     start_time = time.time()
     up_gene_list = [gene_dict[i] for i in up_gene_list if i in gene_dict]
     down_gene_list = [gene_dict[i] for i in down_gene_list if i in gene_dict]
-    n_up_gene = len(up_gene_list)
-    n_down_gene = len(down_gene_list)
     c_scores = []
-    p_values = []
     for cid in data.columns:
         df = data[cid]
         df = pd.DataFrame(df.sort_values(ascending=False)).abs()
         c_scores.append(calc_connectivity_score(up_gene_list, down_gene_list, df, cid))
-        null_distribution = generate_null_distribution(n_up_gene, n_down_gene, df, cid, 10)
-        p_values.append(calc_p_value(c_scores[-1], null_distribution))
     end_time = time.time()
     print("Total running time is", str(datetime.timedelta(seconds=end_time - start_time)))
-    return pd.DataFrame({"expression": data.columns, "c_score": c_scores, "p_value": p_values})
+    return pd.DataFrame({"expression": data.columns, "c_score": c_scores})
 
 result = cmap(up_genes, down_genes)
 result = result.sort_values(by=["c_score"], ascending=False)

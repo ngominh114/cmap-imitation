@@ -1,22 +1,23 @@
-if (!require("cmapR", character.only = TRUE)){
-  install.packages("devtools")
-  install.packages("cmapR")
-}
-
 library(cmapR)
 
+# reference_file = "C:/Users/ngomi/Downloads/Documents/data.gctx"
+# up_gene_file = "../data/Example_up_genes.txt"
+# down_gene_file = "../data/Example_down_genes.txt"
+# gene_file = "../data/geneinfo_beta.txt"
 
-reference_file = "C:/Users/ngomi/Downloads/Documents/data.gctx"
-up_gene_file = "../data/Example_up_genes.txt"
-down_gene_file = "../data/Example_down_genes.txt"
-gene_file = "../data/geneinfo_beta.txt"
+args = commandArgs(trailingOnly=TRUE)
+query_name = args[1]
+reference_file = args[2]
+up_gene_file = args[3]
+down_gene_file = args[4]
+gene_file = args[5]
 
-# args = commandArgs(trailingOnly=TRUE)
-# query_name = args[1]
-# reference_file = args[2]
-# up_gene_file = args[3]
-# down_gene_file = args[4]
-# gene_file = args[5]
+print(paste("Start calculating query:", query_name, "with the following arguments."))
+print(paste("Reference dataset location:", reference_data_file))
+print(paste("Gene info file location:", gene_info_file))
+print(paste("Up gene file location:", up_gene_file))
+print(paste("Down gene file location:", down_gene_file))
+
 col_meta = read_gctx_meta(reference_file, dim="col")
 cids = col_meta$id
 row_meta = read_gctx_meta(reference_file, dim="row")
@@ -83,8 +84,7 @@ cmap = function(){
   result_df <- data.frame("expression" = cids, "connectivity_score" = c_scores)
   return(result_df)
 }
-print(Sys.time())
 result = cmap()
-write.csv(result, paste("test_query", "result_1.csv"))
+write.csv(result, paste(query_name, "_result.csv"))
 
 print(Sys.time())
