@@ -1,5 +1,8 @@
 #!/bin/bash
 
+module load R
+export R_LIBS_USER=~/R-modules
+
 query_name=$1
 reference_data_file=$2
 gene_info_file=$3
