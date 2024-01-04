@@ -51,22 +51,24 @@ up_gene_list = as.integer(up_gene_list)
 down_gene_list = as.integer(down_gene_list)
 
 calc_es_score = function(reference_df, gene_list){
-  gene_indexes <- reference_df$gene %in% gene_list
-  nr <- sum(abs(reference_df[gene_indexes, "expression"]))
-  n <- nrow(reference_df)
-  ns <- length(gene_list)
-  
-  cumsum_score <- rep(0, n)
-  cumsum_score[gene_indexes] <- abs(reference_df[gene_indexes, "expression"]) / nr
-  cumsum_score[!gene_indexes] <- -1 /(n - ns)
-  scores = cumsum(cumsum_score)
-  max_score <- max(scores, -1)
-  min_score <- min(scores, 1)
-  if(abs(max_score) > abs(min_score)){
-    return(max_score)
-  }else{
-    return(min_score)
-  }
+  tryCatch(expr = {
+    gene_indexes <- reference_df$gene %in% gene_list
+    nr <- sum(abs(reference_df[gene_indexes, "expression"]))
+    n <- nrow(reference_df)
+    ns <- length(gene_list)
+    
+    cumsum_score <- rep(0, n)
+    cumsum_score[gene_indexes] <- abs(reference_df[gene_indexes, "expression"]) / nr
+    cumsum_score[!gene_indexes] <- -1 /(n - ns)
+    scores = cumsum(cumsum_score)
+    max_score <- max(scores, -1)
+    min_score <- min(scores, 1)
+    if(abs(max_score) > abs(min_score)){
+      return(max_score)
+    }else{
+      return(min_score)
+    }
+  })
 }
 
 cmap = function(){
