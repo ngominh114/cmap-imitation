@@ -1,0 +1,86 @@
+from cmap import cmap, cmap_improve
+import os, sys
+from cmapPy.pandasGEXpress.parse import parse
+import numpy as np
+import random
+import time
+import json
+
+def load_matrix_from_file(file_path):
+    with open(file_path, 'r') as file:
+        return [[int(value) for value in line.split()] for line in file]
+
+reference_data_file = sys.argv[1]
+data = parse(reference_data_file).data_df
+data.index = [int(i) for i in data.index]
+nearest_neighbor_euclidean = np.loadtxt("../distance_files/nearest_neighbor_euclidean.txt", dtype=int)
+nearest_neighbor_cosine = np.loadtxt("../distance_files/nearest_neighbor_cosine.txt", dtype=int)
+result_dir = '../result'
+os.makedirs(result_dir, exist_ok=True)
+
+def convert_to_int(arr):
+    for i in range(len(arr)):
+        arr[i] = int(arr[i])
+    return arr
+
+result = {
+    'up_genes': [],
+    'down_genes': [],
+    'original_mimic_result': [],
+    'original_mimic_score': [],
+    'original_reverse_result': [],
+    'original_reverse_score': [],
+    'original_runing_time': 0,
+    'euclidean_mimic_result': [],
+    'euclidean_mimic_score': [],
+    'euclidean_reverse_result': [],
+    'euclidean_reverse_score': [],
+    'euclidean_running_time': 0,
+    'cosine_mimic_result': [],
+    'cosine_mimic_score': [],
+    'cosine_reverse_result': [],
+    'cosine_reverse_score': [],
+    'cosine_running_time': 0
+}
+
+def get_random_gene_list():
+    n_up_genes = random.randint(10, 150)
+    n_down_genes = random.randint(10, 150)
+    rand_genes = random.choices(data.index, k = n_up_genes + n_down_genes)
+    return rand_genes[:n_up_genes], rand_genes[n_up_genes:]
+
+def run_test():
+    print("Start generating test result")
+    for i in range(100):
+        up_genes_list, down_genes_list = get_random_gene_list()
+        up_genes = set(up_genes_list)
+        down_genes = set(down_genes_list)
+        start_time = time.time()
+        original_result = cmap(up_genes, down_genes, data)
+        original_time = time.time()
+        euclidean_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
+        euclidean_time = time.time()
+        cosine_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_cosine)
+        cosine_time = time.time()
+        result['up_genes'] = convert_to_int(up_genes_list)
+        result['down_genes'] = convert_to_int(down_genes_list)
+        result['original_mimic_result'] = original_result['expression'].head(50).values.tolist()
+        result['original_mimic_score'] = original_result['c_score'].head(50).values.tolist()
+        result['original_reverse_result'] = original_result['expression'].tail(50).values.tolist()
+        result['original_reverse_score'] = original_result['c_score'].tail(50).values.tolist()
+        result['original_runing_time'] = original_time - start_time
+        result['euclidean_mimic_result'] = euclidean_result['expression'].head(50).values.tolist()
+        result['euclidean_mimic_score'] = euclidean_result['c_score'].head(50).values.tolist()
+        result['euclidean_reverse_result'] = euclidean_result['expression'].tail(50).values.tolist()
+        result['euclidean_reverse_score'] = euclidean_result['c_score'].tail(50).values.tolist()
+        result['euclidean_running_time'] = euclidean_time - original_time
+        result['cosine_mimic_result'] = cosine_result['expression'].head(50).values.tolist()
+        result['cosine_mimic_score'] = cosine_result['c_score'].head(50).values.tolist()
+        result['cosine_reverse_result'] = cosine_result['expression'].tail(50).values.tolist()
+        result['cosine_reverse_score'] = cosine_result['c_score'].tail(50).values.tolist()
+        result['cosine_running_time'] = cosine_time - euclidean_time
+        with open(f'{result_dir}/output_{i}.json', 'w') as file:
+            json.dump(result, file)
+        print(f'output_{i}.json file created')
+
+run_test()
