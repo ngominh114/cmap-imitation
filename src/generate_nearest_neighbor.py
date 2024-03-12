@@ -18,7 +18,7 @@ os.makedirs(tmp_dicectory, exist_ok=True)
 
 n_rows = len(data)
 
-metrics = ['euclidean', 'cosine']
+metrics = ['euclidean', 'cosine', 'cityblock']
 
 def file_index(file):
     dot_index = file.index(".")
