@@ -16,6 +16,7 @@ data = parse(reference_data_file).data_df
 data.index = [int(i) for i in data.index]
 nearest_neighbor_euclidean = np.loadtxt("../distance_files/nearest_neighbor_euclidean.txt", dtype=int)
 nearest_neighbor_cosine = np.loadtxt("../distance_files/nearest_neighbor_cosine.txt", dtype=int)
+nearest_neighbor_manhattan = np.loadtxt("../distance_files/nearest_neighbor_cityblock.txt", dtype=int)
 result_dir = '../result'
 os.makedirs(result_dir, exist_ok=True)
 
@@ -39,6 +40,8 @@ def run_test(i):
     original_time = time.time()
     euclidean_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
     euclidean_time = time.time()
+    manhattan_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_manhattan)
+    manhattan_time = time.time()
     cosine_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_cosine)
     cosine_time = time.time()
     result = {}
@@ -46,22 +49,19 @@ def run_test(i):
     result['down_genes'] = convert_to_int(down_genes_list)
     result['original_mimic_result'] = original_result['expression'].head(50).values.tolist()
     result['original_mimic_score'] = original_result['c_score'].head(50).values.tolist()
-    result['original_reverse_result'] = original_result['expression'].tail(50).values.tolist()
-    result['original_reverse_score'] = original_result['c_score'].tail(50).values.tolist()
     result['original_runing_time'] = original_time - start_time
     result['euclidean_mimic_result'] = euclidean_result['expression'].head(50).values.tolist()
     result['euclidean_mimic_score'] = euclidean_result['c_score'].head(50).values.tolist()
-    result['euclidean_reverse_result'] = euclidean_result['expression'].tail(50).values.tolist()
-    result['euclidean_reverse_score'] = euclidean_result['c_score'].tail(50).values.tolist()
     result['euclidean_running_time'] = euclidean_time - original_time
+    result['manhattan_mimic_result'] = manhattan_result['expression'].head(50).values.tolist()
+    result['manhattan_mimic_score'] = manhattan_result['c_score'].head(50).values.tolist()
+    result['manhattan_running_time'] = manhattan_time - euclidean_time
     result['cosine_mimic_result'] = cosine_result['expression'].head(50).values.tolist()
     result['cosine_mimic_score'] = cosine_result['c_score'].head(50).values.tolist()
-    result['cosine_reverse_result'] = cosine_result['expression'].tail(50).values.tolist()
-    result['cosine_reverse_score'] = cosine_result['c_score'].tail(50).values.tolist()
-    result['cosine_running_time'] = cosine_time - euclidean_time
-    with open(f'{result_dir}/output_{i + 51}.json', 'w') as file:
+    result['cosine_running_time'] = cosine_time - manhattan_time
+    with open(f'{result_dir}/output_{i}.json', 'w') as file:
         json.dump(result, file)
-    print(f'output_{i + 51}.json file created')
+    print(f'output_{i}.json file created')
 
 Parallel(n_jobs=8)(
     delayed(run_test)(i) for i in range(1000)
