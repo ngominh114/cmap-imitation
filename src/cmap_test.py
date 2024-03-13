@@ -63,6 +63,6 @@ def run_test(i):
         json.dump(result, file)
     print(f'output_{i}.json file created')
 
-Parallel(n_jobs=8)(
+Parallel(n_jobs=-1)(
     delayed(run_test)(i) for i in range(1000)
 )
