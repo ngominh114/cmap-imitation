@@ -1,4 +1,5 @@
 distance_files/*
-result/*
+result
 tmp
+original_result
 **/__pycache__/*
