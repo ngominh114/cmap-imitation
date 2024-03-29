@@ -1,5 +1,5 @@
 from joblib import Parallel, delayed
-from cmap import cmap, cmap_improve
+from cmap import cmap, cmap_improve, cmap_random
 import os, sys
 from cmapPy.pandasGEXpress.parse import parse
 import numpy as np
@@ -38,6 +38,8 @@ def run_test(i):
     start_time = time.time()
     original_result = cmap(up_genes, down_genes, data)
     original_time = time.time()
+    random_result = cmap_random(up_genes, down_genes, data)
+    random_time = time.time()
     euclidean_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
     euclidean_time = time.time()
     manhattan_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_manhattan)
@@ -47,17 +49,20 @@ def run_test(i):
     result = {}
     result['up_genes'] = convert_to_int(up_genes_list)
     result['down_genes'] = convert_to_int(down_genes_list)
-    result['original_mimic_result'] = original_result['expression'].head(50).values.tolist()
-    result['original_mimic_score'] = original_result['c_score'].head(50).values.tolist()
-    result['original_runing_time'] = original_time - start_time
-    result['euclidean_mimic_result'] = euclidean_result['expression'].head(50).values.tolist()
-    result['euclidean_mimic_score'] = euclidean_result['c_score'].head(50).values.tolist()
-    result['euclidean_running_time'] = euclidean_time - original_time
-    result['manhattan_mimic_result'] = manhattan_result['expression'].head(50).values.tolist()
-    result['manhattan_mimic_score'] = manhattan_result['c_score'].head(50).values.tolist()
+    result['original_mimic_result'] = original_result['expression'].head(100).values.tolist()
+    result['original_mimic_score'] = original_result['c_score'].head(100).values.tolist()
+    result['original_runinng_time'] = original_time - start_time
+    result['random_mimic_result'] = random_result['expression'].head(100).values.tolist()
+    result['random_mimic_score'] = random_result['c_score'].head(100).values.tolist()
+    result['random_runinng_time'] = random_time - original_time
+    result['euclidean_mimic_result'] = euclidean_result['expression'].head(100).values.tolist()
+    result['euclidean_mimic_score'] = euclidean_result['c_score'].head(100).values.tolist()
+    result['euclidean_running_time'] = euclidean_time - random_time
+    result['manhattan_mimic_result'] = manhattan_result['expression'].head(100).values.tolist()
+    result['manhattan_mimic_score'] = manhattan_result['c_score'].head(100).values.tolist()
     result['manhattan_running_time'] = manhattan_time - euclidean_time
-    result['cosine_mimic_result'] = cosine_result['expression'].head(50).values.tolist()
-    result['cosine_mimic_score'] = cosine_result['c_score'].head(50).values.tolist()
+    result['cosine_mimic_result'] = cosine_result['expression'].head(100).values.tolist()
+    result['cosine_mimic_score'] = cosine_result['c_score'].head(100).values.tolist()
     result['cosine_running_time'] = cosine_time - manhattan_time
     with open(f'{result_dir}/output_{i}.json', 'w') as file:
         json.dump(result, file)

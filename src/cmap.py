@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import random
 
 def calc_es_score(ref_df, cid, gene_list):
     n_genes = len(ref_df.index)
@@ -42,4 +43,18 @@ def cmap_improve(up_gene_list, down_gene_list, data, nearest_neighbor_info):
             if c_score <= 0.1:
                 checked.update(nearest_neighbor_info[i,:10])
         
+    return pd.DataFrame({"expression": proceeded, "c_score": c_scores}).sort_values(by=["c_score"], ascending=False)
+
+def cmap_random(up_gene_list, down_gene_list, data):
+    checked = set()
+    proceeded = []
+    c_scores = []
+    for i, cid in enumerate(data.columns):
+        if i not in checked:
+            c_score = calc_connectivity_score(up_gene_list, down_gene_list, data, cid)
+            proceeded.append(cid)
+            c_scores.append(c_score)
+            if c_score <= 0.1:
+                checked.update(random.choices(data.index, k=10))
+                
     return pd.DataFrame({"expression": proceeded, "c_score": c_scores}).sort_values(by=["c_score"], ascending=False)
