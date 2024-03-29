@@ -12,6 +12,8 @@ def load_matrix_from_file(file_path):
         return [[int(value) for value in line.split()] for line in file]
 
 reference_data_file = sys.argv[1]
+begin = int(sys.argv[2])
+end = int(sys.argv[3])
 data = parse(reference_data_file).data_df
 data.index = [int(i) for i in data.index]
 nearest_neighbor_euclidean = np.loadtxt("../distance_files/nearest_neighbor_euclidean.txt", dtype=int)
@@ -69,5 +71,5 @@ def run_test(i):
     print(f'output_{i}.json file created')
 
 Parallel(n_jobs=-1)(
-    delayed(run_test)(i) for i in range(1000)
+    delayed(run_test)(i) for i in range(begin, end)
 )
