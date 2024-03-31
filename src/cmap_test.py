@@ -1,5 +1,5 @@
 from joblib import Parallel, delayed
-from cmap import cmap, cmap_improve, cmap_random
+from cmap import cmap, cmap_improve
 import os, sys
 from cmapPy.pandasGEXpress.parse import parse
 import numpy as np
@@ -19,7 +19,7 @@ data.index = [int(i) for i in data.index]
 nearest_neighbor_euclidean = np.loadtxt("../distance_files/nearest_neighbor_euclidean.txt", dtype=int)
 nearest_neighbor_cosine = np.loadtxt("../distance_files/nearest_neighbor_cosine.txt", dtype=int)
 nearest_neighbor_manhattan = np.loadtxt("../distance_files/nearest_neighbor_cityblock.txt", dtype=int)
-result_dir = '../data'
+result_dir = '../result'
 os.makedirs(result_dir, exist_ok=True)
 
 def convert_to_int(arr):
@@ -34,21 +34,17 @@ def get_random_gene_list():
     return rand_genes[:n_up_genes], rand_genes[n_up_genes:]
 
 def run_test(i):
-    indexes = list(range(len(data.columns)))
-    random.shuffle(indexes)
     up_genes_list, down_genes_list = get_random_gene_list()
     up_genes = set(up_genes_list)
     down_genes = set(down_genes_list)
     start_time = time.time()
     original_result = cmap(up_genes, down_genes, data)
     original_time = time.time()
-    random_result = cmap_random(up_genes, down_genes, data, indexes)
-    random_time = time.time()
-    euclidean_result = cmap_improve(up_genes, down_genes, data, indexes, nearest_neighbor_euclidean)
+    euclidean_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
     euclidean_time = time.time()
-    manhattan_result = cmap_improve(up_genes, down_genes, data, indexes, nearest_neighbor_manhattan)
+    manhattan_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_manhattan)
     manhattan_time = time.time()
-    cosine_result = cmap_improve(up_genes, down_genes, data, indexes, nearest_neighbor_cosine)
+    cosine_result = cmap_improve(up_genes, down_genes, data, nearest_neighbor_cosine)
     cosine_time = time.time()
     result = {}
     result['up_genes'] = convert_to_int(up_genes_list)
@@ -56,12 +52,9 @@ def run_test(i):
     result['original_mimic_result'] = original_result['expression'].head(100).values.tolist()
     result['original_mimic_score'] = original_result['c_score'].head(100).values.tolist()
     result['original_running_time'] = original_time - start_time
-    result['random_mimic_result'] = random_result['expression'].head(100).values.tolist()
-    result['random_mimic_score'] = random_result['c_score'].head(100).values.tolist()
-    result['random_running_time'] = random_time - original_time
     result['euclidean_mimic_result'] = euclidean_result['expression'].head(100).values.tolist()
     result['euclidean_mimic_score'] = euclidean_result['c_score'].head(100).values.tolist()
-    result['euclidean_running_time'] = euclidean_time - random_time
+    result['euclidean_running_time'] = euclidean_time - original_result
     result['manhattan_mimic_result'] = manhattan_result['expression'].head(100).values.tolist()
     result['manhattan_mimic_score'] = manhattan_result['c_score'].head(100).values.tolist()
     result['manhattan_running_time'] = manhattan_time - euclidean_time

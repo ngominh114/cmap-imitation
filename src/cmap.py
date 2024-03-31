@@ -31,12 +31,11 @@ def cmap(up_gene_list, down_gene_list, data):
     return pd.DataFrame({"expression": data.columns, "c_score": c_scores}).sort_values(by=["c_score"], ascending=False)
 
 check = set()
-def cmap_improve(up_gene_list, down_gene_list, data, indexes, nearest_neighbor_info):
+def cmap_improve(up_gene_list, down_gene_list, data, nearest_neighbor_info):
     checked = set()
     proceeded = []
     c_scores = []
-    for i in indexes:
-        cid = data.columns[i]
+    for i, cid in enumerate(data.columns):
         if i not in checked:
             c_score = calc_connectivity_score(up_gene_list, down_gene_list, data, cid)
             proceeded.append(cid)
