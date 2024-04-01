@@ -54,7 +54,7 @@ def run_test(i):
     result['original_running_time'] = original_time - start_time
     result['euclidean_mimic_result'] = euclidean_result['expression'].head(100).values.tolist()
     result['euclidean_mimic_score'] = euclidean_result['c_score'].head(100).values.tolist()
-    result['euclidean_running_time'] = euclidean_time - original_result
+    result['euclidean_running_time'] = euclidean_time - original_time
     result['manhattan_mimic_result'] = manhattan_result['expression'].head(100).values.tolist()
     result['manhattan_mimic_score'] = manhattan_result['c_score'].head(100).values.tolist()
     result['manhattan_running_time'] = manhattan_time - euclidean_time
