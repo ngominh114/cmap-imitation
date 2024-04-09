@@ -6,7 +6,7 @@ from cmap import cmap, cmap_improve
 import pandas as pd
 import numpy as np
 
-start_time = time.time()
+
 query_name = sys.argv[1]
 reference_data_file = sys.argv[2] # reference data in gctx format
 gene_info_file = sys.argv[3] # ../data/geneinfo_beta.txt
@@ -38,11 +38,28 @@ up_genes = set([gene_dict[i] for i in up_genes if i in gene_dict])
 down_genes = set([gene_dict[i] for i in down_genes if i in gene_dict])
 
 nearest_neighbor_euclidean = np.loadtxt("../distance_files/nearest_neighbor_euclidean.txt", dtype=int)
+nearest_neighbor_manhattan = np.loadtxt("../distance_files/nearest_neighbor_cityblock.txt", dtype=int)
 nearest_neighbor_cosine = np.loadtxt("../distance_files/nearest_neighbor_cosine.txt", dtype=int)
 
-result = cmap(up_genes, down_genes, data)
-result_euc = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
-result_cos = cmap_improve(up_genes, down_genes, data, nearest_neighbor_cosine)
+start_time = time.time()
+original_result = cmap(up_genes, down_genes, data)
+original_time = time.time()
 
-end_time = time.time()
-print("Total running time is", str(datetime.timedelta(seconds=end_time - start_time)))
+result_eu = cmap_improve(up_genes, down_genes, data, nearest_neighbor_euclidean)
+eu_time = time.time()
+
+result_man = cmap_improve(up_genes, down_genes, data, nearest_neighbor_manhattan)
+man_time = time.time()
+
+result_cos = cmap_improve(up_genes, down_genes, data, nearest_neighbor_cosine)
+cos_time = time.time()
+
+original_result.to_csv("../result/original_result.csv")
+result_eu.to_csv("../result/eu_result.csv")
+result_man.to_csv("../result/man_result.csv")
+result_cos.to_csv("../result/cos_result.csv")
+
+print("Original running time is", (original_time - start_time))
+print("Eu running time is", (eu_time - original_time))
+print("Original running time is", (man_time - eu_time))
+print("Original running time is", (eu_time - cos_time))
